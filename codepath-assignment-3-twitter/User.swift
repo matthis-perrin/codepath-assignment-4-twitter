@@ -56,7 +56,7 @@ class User: NSObject {
     init(dictionary: NSDictionary) {
         self.dictionary = dictionary
         self.name = dictionary["name"] as? String
-        self.screenName = dictionary["screen_name"] as? String
+        self.screenName = "@" + ((dictionary["screen_name"] as? String) ?? "")
         self.profileImageUrl = dictionary["profile_image_url"] as? String
         self.tagline = dictionary["description"] as? String
     }

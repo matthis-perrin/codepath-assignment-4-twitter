@@ -25,7 +25,7 @@ class TwitterClient: BDBOAuth1SessionManager {
         self.fetchAccessTokenWithPath("oauth/access_token", method: "POST", requestToken: BDBOAuth1Credential(queryString: url.query), success: { (accessToken: BDBOAuth1Credential!) -> Void in
             self.requestSerializer.saveAccessToken(accessToken)
             
-            self.GET("1.1/account/verify_credentials.json", parameters: nil, progress: nil, success: { (task: NSURLSessionDataTask, res: AnyObject?) -> Void in
+            self.GET("1.1/account/verify_credentials.json", parameters: nil, success: { (task: NSURLSessionDataTask, res: AnyObject?) -> Void in
                 if let data = res as? NSDictionary {
                     User.currentUser = User(dictionary: data)
                     self.loginCompletion?(user: User.currentUser, error: nil)
@@ -52,7 +52,7 @@ class TwitterClient: BDBOAuth1SessionManager {
     }
     
     func home_timeline(parameters: NSDictionary?, completion: (tweets: [Tweet]?, error: NSError?) -> Void) {
-        self.GET("1.1/statuses/home_timeline.json", parameters: parameters, progress: nil, success: { (task: NSURLSessionDataTask, res: AnyObject?) -> Void in
+        self.GET("1.1/statuses/home_timeline.json", parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject?) -> Void in
             if let data = res as? [NSDictionary] {
                 let tweets = Tweet.tweetsWithArray(data)
                 completion(tweets: tweets, error: nil)
