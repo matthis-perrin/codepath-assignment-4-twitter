@@ -6,6 +6,7 @@
 //  Copyright © 2016 codepath. All rights reserved.
 //
 
+
 import UIKit
 
 class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
@@ -16,6 +17,10 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
     
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        self.navigationItem.setLeftBarButtonItem(UIBarButtonItem(title: "Sign Out", style: UIBarButtonItemStyle.Plain, target: self, action: "signOutButtonTap"), animated: false)
+        self.navigationItem.setRightBarButtonItem(UIBarButtonItem(title: "New", style: UIBarButtonItemStyle.Plain, target: self, action: "newButtonTap"), animated: false)
+        
         self.tableView.delegate = self
         self.tableView.dataSource = self
         self.tableView.estimatedRowHeight = 120
@@ -46,6 +51,32 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
                 self.tableView.reloadData()
             })
         }
+    }
+    
+    func signOutButtonTap() {
+        TwitterClient.logout() {
+            let alert = UIAlertController(title: "Signing out", message: "See ya!", preferredStyle: .Alert)
+            self.presentViewController(alert, animated: true, completion: nil)
+            self.delay(1.5) {
+                exit(0)
+            }
+        }
+    }
+    
+    func newButtonTap() {
+        if let newTweetViewController = self.storyboard?.instantiateViewControllerWithIdentifier("newTweetViewController") as? NewTweetViweController {
+            if let navController = self.navigationController, let currentUser = User.currentUser {
+                navController.pushViewController(newTweetViewController, animated: true)
+                newTweetViewController.setData(currentUser) { (tweet: Tweet) in
+                    self.tweets.insert(tweet, atIndex: 0)
+                    self.tableView.reloadData()
+                }
+            }
+        }
+    }
+    
+    func delay(delay: Double, closure: () -> Void) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, Int64(delay * Double(NSEC_PER_SEC))), dispatch_get_main_queue(), closure)
     }
 
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {

@@ -51,6 +51,12 @@ class TwitterClient: BDBOAuth1SessionManager {
         }
     }
     
+    static func logout(completion: (() -> Void)?) {
+        User.currentUser = nil
+        TwitterClient.sharedInstance.requestSerializer.removeAccessToken()
+        completion?()
+    }
+    
     func home_timeline(parameters: NSDictionary?, completion: (tweets: [Tweet]?, error: NSError?) -> Void) {
         self.GET("1.1/statuses/home_timeline.json", parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject?) -> Void in
             if let data = res as? [NSDictionary] {
@@ -60,6 +66,20 @@ class TwitterClient: BDBOAuth1SessionManager {
         }, failure: { (task: NSURLSessionDataTask?, error: NSError) -> Void in
             completion(tweets: nil, error: error)
         })
+    }
+    
+    func update_status(status: String, completion: (tweet: Tweet?, error: NSError?) -> Void) {
+        let parameters = NSDictionary(dictionary: ["status": status])
+        self.POST("1.1/statuses/update.json", parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject) -> Void in
+            if let data = res as? NSDictionary {
+                print(completion)
+                completion(tweet: Tweet(dictionary: data), error: nil)
+            } else {
+                completion(tweet: nil, error: NSError(domain: "TwitterClient", code: 1, userInfo: nil))
+            }
+        }) { (task: NSURLSessionDataTask?, error: NSError) -> Void in
+            completion(tweet: nil, error: error)
+        }
     }
     
 }
