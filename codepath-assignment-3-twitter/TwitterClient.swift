@@ -72,13 +72,41 @@ class TwitterClient: BDBOAuth1SessionManager {
         let parameters = NSDictionary(dictionary: ["status": status])
         self.POST("1.1/statuses/update.json", parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject) -> Void in
             if let data = res as? NSDictionary {
-                print(completion)
                 completion(tweet: Tweet(dictionary: data), error: nil)
             } else {
                 completion(tweet: nil, error: NSError(domain: "TwitterClient", code: 1, userInfo: nil))
             }
         }) { (task: NSURLSessionDataTask?, error: NSError) -> Void in
             completion(tweet: nil, error: error)
+        }
+    }
+    
+    func setRetweet(retweet: Bool, tweetId: Int, completion: (tweet: Tweet?, error: NSError?) -> Void) {
+        let verb = retweet ? "retweet" : "unretweet"
+        let url = "1.1/statuses/\(verb)/\(tweetId).json"
+        self.POST(url, parameters: nil, success: { (task: NSURLSessionDataTask, res: AnyObject) -> Void in
+            if let data = res as? NSDictionary {
+                completion(tweet: Tweet(dictionary: data), error: nil)
+            } else {
+                completion(tweet: nil, error: NSError(domain: "TwitterClient", code: 1, userInfo: nil))
+            }
+        }) { (task: NSURLSessionDataTask?, error: NSError) -> Void in
+            completion(tweet: nil, error: error)
+        }
+    }
+    
+    func setFavorite(favorite: Bool, tweetId: Int, completion: (tweet: Tweet?, error: NSError?) -> Void) {
+        let parameters = NSDictionary(dictionary: ["id": tweetId])
+        let verb = favorite ? "create" : "destroy"
+        let url = "1.1/favorites/\(verb).json"
+        self.POST(url, parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject) -> Void in
+            if let data = res as? NSDictionary {
+                completion(tweet: Tweet(dictionary: data), error: nil)
+            } else {
+                completion(tweet: nil, error: NSError(domain: "TwitterClient", code: 1, userInfo: nil))
+            }
+            }) { (task: NSURLSessionDataTask?, error: NSError) -> Void in
+                completion(tweet: nil, error: error)
         }
     }
     

@@ -12,6 +12,7 @@ import UIKit
 class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     var tweets: [Tweet] = [Tweet]()
+    private var refreshControl: UIRefreshControl!
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -20,6 +21,10 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
 
         self.navigationItem.setLeftBarButtonItem(UIBarButtonItem(title: "Sign Out", style: UIBarButtonItemStyle.Plain, target: self, action: "signOutButtonTap"), animated: false)
         self.navigationItem.setRightBarButtonItem(UIBarButtonItem(title: "New", style: UIBarButtonItemStyle.Plain, target: self, action: "newButtonTap"), animated: false)
+        
+        self.refreshControl = UIRefreshControl()
+        self.refreshControl.addTarget(self, action: "refreshControlAction:", forControlEvents: .ValueChanged)
+        tableView.insertSubview(self.refreshControl, atIndex: 0)
         
         self.tableView.delegate = self
         self.tableView.dataSource = self
@@ -44,13 +49,21 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
             TwitterClient.sharedInstance.home_timeline(nil, completion: { (tweets, error) -> Void in
                 if let tweets = tweets {
                     self.tweets = tweets
-                    print(self.tweets[0].author!.profileImageUrl)
                 } else {
                     print(error)
                 }
+                CATransaction.begin()
+                CATransaction.setCompletionBlock({ () -> Void in
+                    self.refreshControl.endRefreshing()
+                })
                 self.tableView.reloadData()
+                CATransaction.commit()
             })
         }
+    }
+    
+    func refreshControlAction(refreshControl: UIRefreshControl) {
+        self.fetchTimeline()
     }
     
     func signOutButtonTap() {
