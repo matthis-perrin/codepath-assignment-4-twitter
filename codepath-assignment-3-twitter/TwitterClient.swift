@@ -68,8 +68,11 @@ class TwitterClient: BDBOAuth1SessionManager {
         })
     }
     
-    func update_status(status: String, completion: (tweet: Tweet?, error: NSError?) -> Void) {
-        let parameters = NSDictionary(dictionary: ["status": status])
+    func update_status(status: String, replyTo: Int?, completion: (tweet: Tweet?, error: NSError?) -> Void) {
+        let parameters = NSMutableDictionary(dictionary: ["status": status])
+        if let replyTo = replyTo {
+            parameters.setValue(replyTo, forKey: "in_reply_to_status_id")
+        }
         self.POST("1.1/statuses/update.json", parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject) -> Void in
             if let data = res as? NSDictionary {
                 completion(tweet: Tweet(dictionary: data), error: nil)

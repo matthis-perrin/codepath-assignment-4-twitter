@@ -80,7 +80,7 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
         if let newTweetViewController = self.storyboard?.instantiateViewControllerWithIdentifier("newTweetViewController") as? NewTweetViweController {
             if let navController = self.navigationController, let currentUser = User.currentUser {
                 navController.pushViewController(newTweetViewController, animated: true)
-                newTweetViewController.setData(currentUser) { (tweet: Tweet) in
+                newTweetViewController.setData(currentUser, replyTo: nil) { (tweet: Tweet) in
                     self.tweets.insert(tweet, atIndex: 0)
                     self.tableView.reloadData()
                 }
@@ -111,7 +111,10 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
         if let tweetViewController = self.storyboard?.instantiateViewControllerWithIdentifier("tweetViewController") as? TweetViewController {
             if let navController = self.navigationController {
                 navController.pushViewController(tweetViewController, animated: true)
-                tweetViewController.setData(self.tweets[indexPath.row])
+                tweetViewController.setData(self.tweets[indexPath.row]) { (tweet: Tweet) in
+                    self.tweets.insert(tweet, atIndex: 0)
+                    self.tableView.reloadData()
+                }
             }
         }
     }

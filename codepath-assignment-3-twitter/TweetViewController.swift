@@ -22,19 +22,27 @@ class TweetViewController: UIViewController {
     @IBOutlet weak var favoriteIconImageView: UIImageView!
     
     private var tweet: Tweet!
+    private var onTweetReply: ((tweet: Tweet) -> Void)!
     
-    func setData(tweet: Tweet) {
+    func setData(tweet: Tweet, onTweetReply: (tweet: Tweet) -> Void) {
         self.tweet = tweet
+        self.onTweetReply = onTweetReply
     }
     
     override func viewDidLoad() {
         self.updateUI()
+        
         let retweetTapGestureRecognizer = UITapGestureRecognizer(target: self, action: "onRetweetTap")
         self.retweetIconImageView.userInteractionEnabled = true
         self.retweetIconImageView.addGestureRecognizer(retweetTapGestureRecognizer)
+        
         let favoriteTapGestureRecognizer = UITapGestureRecognizer(target: self, action: "onFavoriteTap")
         self.favoriteIconImageView.userInteractionEnabled = true
         self.favoriteIconImageView.addGestureRecognizer(favoriteTapGestureRecognizer)
+        
+        let replyTapGestureRecognizer = UITapGestureRecognizer(target: self, action: "onReplyTap")
+        self.replyIconImageView.userInteractionEnabled = true
+        self.replyIconImageView.addGestureRecognizer(replyTapGestureRecognizer)
     }
     
     private func updateUI() {
@@ -91,6 +99,15 @@ class TweetViewController: UIViewController {
                 self.updateUI()
             } else {
                 print(error)
+            }
+        }
+    }
+    
+    func onReplyTap() {
+        if let newTweetViewController = self.storyboard?.instantiateViewControllerWithIdentifier("newTweetViewController") as? NewTweetViweController {
+            if let navController = self.navigationController, let currentUser = User.currentUser {
+                navController.pushViewController(newTweetViewController, animated: true)
+                newTweetViewController.setData(currentUser, replyTo: self.tweet, onNewTweet: self.onTweetReply)
             }
         }
     }

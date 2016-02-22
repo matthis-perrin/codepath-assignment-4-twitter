@@ -15,10 +15,12 @@ class NewTweetViweController: UIViewController {
     @IBOutlet weak var tweetTextField: UITextView!
     
     private var user: User!
+    private var replyTo: Tweet?
     private var onNewTweet: ((tweet: Tweet) -> Void)?
     
-    func setData(user: User, onNewTweet: ((tweet: Tweet) -> Void)?) {
+    func setData(user: User, replyTo: Tweet?, onNewTweet: ((tweet: Tweet) -> Void)?) {
         self.user = user
+        self.replyTo = replyTo
         self.onNewTweet = onNewTweet
     }
     
@@ -41,7 +43,7 @@ class NewTweetViweController: UIViewController {
     }
     
     func tweetButtonTap() {
-        TwitterClient.sharedInstance.update_status(tweetTextField.text) { (tweet: Tweet?, error: NSError?) in
+        TwitterClient.sharedInstance.update_status(tweetTextField.text, replyTo: self.replyTo?.id) { (tweet: Tweet?, error: NSError?) in
             if let tweet = tweet, let onNewTweet = self.onNewTweet {
                 onNewTweet(tweet: tweet)
             }
