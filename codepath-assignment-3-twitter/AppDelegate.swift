@@ -14,11 +14,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
-        UINavigationBar.appearance().barTintColor = UIColor(red: 51/255.0, green: 156/255.0, blue: 195/255.0, alpha: 1.0)
-        UINavigationBar.appearance().tintColor = UIColor.whiteColor()
-        UINavigationBar.appearance().titleTextAttributes = [NSForegroundColorAttributeName : UIColor.whiteColor()]
-        UIApplication.sharedApplication().statusBarStyle = UIStatusBarStyle.LightContent
+        if User.currentUser == nil {
+            TwitterClient.sharedInstance.loginWithCompletion() { (user: User?, error: NSError?) in
+                if error != nil {
+                    print(error)
+                } else {
+                    self.initContainerViewController()
+                }
+            }
+        } else {
+            self.initContainerViewController()
+        }
+        
         return true
+    }
+    
+    func initContainerViewController() {
+        let storyboard = UIStoryboard(name: "Main", bundle: nil)
+        let hamburgerViewController = window?.rootViewController as! HamburgerViewController
+        let menuViewController = storyboard.instantiateViewControllerWithIdentifier("MenuViewController") as! MenuViewController
+        menuViewController.hamburgerViewController = hamburgerViewController
+        hamburgerViewController.menuViewController = menuViewController
     }
     
     func application(application: UIApplication, openURL url: NSURL, sourceApplication: String?, annotation: AnyObject) -> Bool {

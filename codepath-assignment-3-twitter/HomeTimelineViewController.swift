@@ -12,16 +12,13 @@ import UIKit
 class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 
     var tweets: [Tweet] = [Tweet]()
+    private var isMentions: Bool = false
     private var refreshControl: UIRefreshControl!
     
     @IBOutlet weak var tableView: UITableView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        self.navigationItem.setLeftBarButtonItem(UIBarButtonItem(title: "Sign Out", style: UIBarButtonItemStyle.Plain, target: self, action: "signOutButtonTap"), animated: false)
-        self.navigationItem.setRightBarButtonItem(UIBarButtonItem(title: "New", style: UIBarButtonItemStyle.Plain, target: self, action: "newButtonTap"), animated: false)
-        
         self.refreshControl = UIRefreshControl()
         self.refreshControl.addTarget(self, action: "refreshControlAction:", forControlEvents: .ValueChanged)
         tableView.insertSubview(self.refreshControl, atIndex: 0)
@@ -30,62 +27,50 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
         self.tableView.dataSource = self
         self.tableView.estimatedRowHeight = 120
         self.tableView.rowHeight = UITableViewAutomaticDimension
-        
-        if User.currentUser == nil {
-            TwitterClient.sharedInstance.loginWithCompletion() { (user: User?, error: NSError?) in
-                if User.currentUser != nil {
-                    self.fetchTimeline()
-                } else {
-                    print(error)
-                }
-            }
-        } else {
-            self.fetchTimeline()
-        }
+        self.fetchTimeline()
+    }
+    
+    func setIsMentions(isMentions: Bool) {
+        self.isMentions = isMentions
+        self.fetchTimeline()
+    }
+    
+    private func reloadUI() {
+        self.view.layoutIfNeeded()
+        CATransaction.begin()
+        CATransaction.setCompletionBlock({ () -> Void in
+            self.refreshControl.endRefreshing()
+        })
+        self.tableView.reloadData()
+        CATransaction.commit()
     }
     
     private func fetchTimeline() {
-        if User.currentUser != nil {
-            TwitterClient.sharedInstance.home_timeline(nil, completion: { (tweets, error) -> Void in
+        if isMentions {
+            TwitterClient.sharedInstance.mentions(nil, completion: { (tweets, error) -> Void in
                 if let tweets = tweets {
                     self.tweets = tweets
                 } else {
                     print(error)
                 }
-                CATransaction.begin()
-                CATransaction.setCompletionBlock({ () -> Void in
-                    self.refreshControl.endRefreshing()
-                })
-                self.tableView.reloadData()
-                CATransaction.commit()
+                self.reloadUI()
             })
+        } else {
+            if User.currentUser != nil {
+                TwitterClient.sharedInstance.home_timeline(nil, completion: { (tweets, error) -> Void in
+                    if let tweets = tweets {
+                        self.tweets = tweets
+                    } else {
+                        print(error)
+                    }
+                    self.reloadUI()
+                })
+            }
         }
     }
     
     func refreshControlAction(refreshControl: UIRefreshControl) {
         self.fetchTimeline()
-    }
-    
-    func signOutButtonTap() {
-        TwitterClient.logout() {
-            let alert = UIAlertController(title: "Signing out", message: "See ya!", preferredStyle: .Alert)
-            self.presentViewController(alert, animated: true, completion: nil)
-            self.delay(1.5) {
-                exit(0)
-            }
-        }
-    }
-    
-    func newButtonTap() {
-        if let newTweetViewController = self.storyboard?.instantiateViewControllerWithIdentifier("newTweetViewController") as? NewTweetViweController {
-            if let navController = self.navigationController, let currentUser = User.currentUser {
-                navController.pushViewController(newTweetViewController, animated: true)
-                newTweetViewController.setData(currentUser, replyTo: nil) { (tweet: Tweet) in
-                    self.tweets.insert(tweet, atIndex: 0)
-                    self.tableView.reloadData()
-                }
-            }
-        }
     }
     
     func delay(delay: Double, closure: () -> Void) {
@@ -107,13 +92,13 @@ class HomeTimelineViewController: UIViewController, UITableViewDataSource, UITab
         return UITableViewCell()
     }
     
+    
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-        if let tweetViewController = self.storyboard?.instantiateViewControllerWithIdentifier("tweetViewController") as? TweetViewController {
-            if let navController = self.navigationController {
-                navController.pushViewController(tweetViewController, animated: true)
-                tweetViewController.setData(self.tweets[indexPath.row]) { (tweet: Tweet) in
-                    self.tweets.insert(tweet, atIndex: 0)
-                    self.tableView.reloadData()
+        if let profileViewNavController = self.storyboard?.instantiateViewControllerWithIdentifier("ProfileViewController") as? UINavigationController {
+            if let profileViewController = profileViewNavController.viewControllers[0] as? ProfileViewController {
+                if let navController = self.navigationController {
+                    navController.pushViewController(profileViewController, animated: true)
+                    profileViewController.setData(self.tweets[indexPath.row].author!)
                 }
             }
         }

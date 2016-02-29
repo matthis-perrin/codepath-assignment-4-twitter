@@ -57,6 +57,18 @@ class TwitterClient: BDBOAuth1SessionManager {
         completion?()
     }
     
+    func mentions(parameters: NSDictionary?, completion: (tweets: [Tweet]?, error: NSError?) -> Void) {
+        self.GET("1.1/statuses/mentions_timeline.json", parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject?) -> Void in
+            print(res)
+            if let data = res as? [NSDictionary] {
+                let tweets = Tweet.tweetsWithArray(data)
+                completion(tweets: tweets, error: nil)
+            }
+        }, failure: { (task: NSURLSessionDataTask?, error: NSError) -> Void in
+                completion(tweets: nil, error: error)
+        })
+    }
+    
     func home_timeline(parameters: NSDictionary?, completion: (tweets: [Tweet]?, error: NSError?) -> Void) {
         self.GET("1.1/statuses/home_timeline.json", parameters: parameters, success: { (task: NSURLSessionDataTask, res: AnyObject?) -> Void in
             if let data = res as? [NSDictionary] {
@@ -67,6 +79,7 @@ class TwitterClient: BDBOAuth1SessionManager {
             completion(tweets: nil, error: error)
         })
     }
+    
     
     func update_status(status: String, replyTo: Int?, completion: (tweet: Tweet?, error: NSError?) -> Void) {
         let parameters = NSMutableDictionary(dictionary: ["status": status])
